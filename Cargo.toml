@@ -1,0 +1,22 @@
+[package]
+name = "OpenMusicManager"
+version = "0.1.0"
+authors = ["Andrew Gilbrough <andrew@gilbrough.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["spotify"]
+soundcloud = []
+google_music = []
+spotify = []
+youtube = []
+bandcamp = []
+
+[dependencies]
+serde = {version = "1.0", features=["derive"]}
+serde_json = "1.0"
+serde_urlencoded = "0.6"
+reqwest = "0.10"
+clap = "2"
+tokio = {version = "0.2", features = ["rt-threaded", "time", "fs", "stream", "macros", "blocking", "io-util"]}
