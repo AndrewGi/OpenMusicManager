@@ -1,8 +1,7 @@
 use crate::services::spotify;
 use crate::services::spotify::authentication::scope::Scope;
-use crate::services::spotify::authentication::{ClientID, ClientSecret, RedirectURI};
-use crate::services::spotify::track::FullTrack;
 
+use crate::services::spotify::authentication::{ClientID, ClientSecret, RedirectURI};
 pub mod services;
 
 pub fn clap_app() -> clap::App<'static, 'static> {

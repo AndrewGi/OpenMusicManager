@@ -38,10 +38,7 @@ impl Client {
             .map_err(|e| Error::InvalidHeaderValue(e))?,
         ))
     }
-    pub async fn execute_request(
-        &self,
-        mut req: reqwest::Request,
-    ) -> Result<reqwest::Response, Error> {
+    pub async fn execute_request(&self, req: reqwest::Request) -> Result<reqwest::Response, Error> {
         Ok(self.client.execute(req).await?)
     }
 }

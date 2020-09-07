@@ -30,7 +30,7 @@ impl Playlist {
             .await?)
     }
 }
-#[derive(serde:: Serialize, serde::Deserialize, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct PlaylistTrack {
     pub added_at: String, //Timestamps are formatted like this YYYY-MM-DDTHH:MM:SSZ
     pub added_by: PublicUser,

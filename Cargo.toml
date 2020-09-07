@@ -1,5 +1,5 @@
 [package]
-name = "OpenMusicManager"
+name = "open_music_manager"
 version = "0.1.0"
 authors = ["Andrew Gilbrough <andrew@gilbrough.com>"]
 edition = "2018"

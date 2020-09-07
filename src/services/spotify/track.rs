@@ -2,29 +2,28 @@ use super::album::SimpleAlbum;
 use super::artist::Artist;
 use super::external_ids::ExternalIDs;
 use super::external_urls::ExternalURLs;
-use super::track_link::TrackLink;
 use crate::services::error::Error;
 use crate::services::spotify::client::Client;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct FullTrack {
-    album: SimpleAlbum,
-    artists: Vec<Artist>,
-    available_markets: Vec<String>,
-    disc_number: usize,
-    duration_ms: usize,
-    explicit: bool,
-    external_ids: ExternalIDs,
-    external_urls: ExternalURLs,
-    href: String,
-    id: String,
-    is_local: bool,
-    name: String,
-    popularity: usize,
-    preview_url: Option<String>,
+    pub album: SimpleAlbum,
+    pub artists: Vec<Artist>,
+    pub available_markets: Vec<String>,
+    pub disc_number: usize,
+    pub duration_ms: usize,
+    pub explicit: bool,
+    pub external_ids: ExternalIDs,
+    pub external_urls: ExternalURLs,
+    pub href: String,
+    pub id: String,
+    pub is_local: bool,
+    pub name: String,
+    pub popularity: usize,
+    pub preview_url: Option<String>,
     #[serde(rename = "type")]
-    track_type: String,
-    uri: String,
+    pub track_type: String,
+    pub uri: String,
 }
 impl FullTrack {
     pub fn request_url_ending(track_id: &str) -> String {
@@ -43,19 +42,19 @@ impl FullTrack {
     serde::Serialize, serde::Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug,
 )]
 pub struct SimpleTrack {
-    artists: Vec<Artist>,
-    available_markets: Vec<String>,
-    disc_number: usize,
-    duration_ms: usize,
-    explicit: bool,
-    external_urls: ExternalURLs,
-    href: String,
-    id: String,
-    is_local: bool,
-    track_number: usize,
-    name: String,
-    preview_url: Option<String>,
+    pub artists: Vec<Artist>,
+    pub available_markets: Vec<String>,
+    pub disc_number: usize,
+    pub duration_ms: usize,
+    pub explicit: bool,
+    pub external_urls: ExternalURLs,
+    pub href: String,
+    pub id: String,
+    pub is_local: bool,
+    pub track_number: usize,
+    pub name: String,
+    pub preview_url: Option<String>,
     #[serde(rename = "type")]
-    track_type: String,
-    uri: String,
+    pub track_type: String,
+    pub uri: String,
 }

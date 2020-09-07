@@ -32,7 +32,7 @@ impl SearchType {
             .iter()
             .copied()
             .map(SearchType::as_str)
-            .fold(String::new(), |mut s, search_type| s + search_type + ", ");
+            .fold(String::new(), |s, search_type| s + search_type + ", ");
         //remove trailing comma and space
         out.pop();
         out.pop();

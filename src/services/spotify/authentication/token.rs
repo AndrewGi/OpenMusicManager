@@ -1,6 +1,3 @@
-use crate::services::error::Error;
-use crate::services::spotify::authentication::{AuthCode, RedirectURI};
-
 #[derive(Clone, Debug)]
 pub struct TokenResponse {
     pub access_token: AccessToken,

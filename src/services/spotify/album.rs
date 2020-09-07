@@ -6,7 +6,6 @@ use crate::services::spotify::external_ids::ExternalIDs;
 use crate::services::spotify::external_urls::ExternalURLs;
 use crate::services::spotify::images::Image;
 use crate::services::spotify::track::SimpleTrack;
-use serde::Deserializer;
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum AlbumType {
@@ -26,11 +25,10 @@ impl serde::Serialize for AlbumType {
     }
 }
 impl<'de> serde::Deserialize<'de> for AlbumType {
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as serde::Deserializer<'de>>::Error>
     where
-        D: Deserializer<'de>,
+        D: serde::Deserializer<'de>,
     {
-        use std::fmt::Write;
         const EXPECTED: &'static str = "'album', 'single' or 'compilation'";
         struct AlbumTypeVisitor;
         impl serde::de::Visitor<'_> for AlbumTypeVisitor {
@@ -49,6 +47,11 @@ impl<'de> serde::Deserialize<'de> for AlbumType {
             }
         }
         deserializer.deserialize_str(AlbumTypeVisitor)
+    }
+}
+impl std::fmt::Display for AlbumType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
     }
 }
 impl AlbumType {

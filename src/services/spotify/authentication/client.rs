@@ -36,7 +36,7 @@ impl<'a> Client<'a> {
         super::web_server::get_code(web_server_port).await
     }
     async fn post(&self, body: String) -> Result<TokenResponse, Error> {
-        let mut res = self
+        let res = self
             .reqwest_client
             .post(Self::base_url())
             .body(body)
@@ -56,8 +56,8 @@ impl<'a> Client<'a> {
         #[derive(serde::Deserialize)]
         pub struct TokenRes {
             access_token: String,
-            token_type: String,
-            scope: String,
+            //token_type: String,
+            //scope: String,
             expires_in: u64,
             refresh_token: String,
         }
@@ -104,7 +104,7 @@ impl<'a> Client<'a> {
     }
     pub fn login_url(&self) -> String {
         const AUTH_URL: &'static str = "https://accounts.spotify.com/authorize";
-        let mut scope_str: String = self
+        let scope_str: String = self
             .scopes
             .iter()
             .map(Scope::as_str)
