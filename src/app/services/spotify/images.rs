@@ -3,7 +3,7 @@
 )]
 
 pub struct Image {
-    pub height: usize,
+    pub height: Option<usize>,
     pub url: String,
-    pub width: usize,
+    pub width: Option<usize>,
 }

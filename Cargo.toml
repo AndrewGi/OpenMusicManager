@@ -6,21 +6,29 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
-default = ["spotify"]
+default = ["spotify", "gui"]
 soundcloud = []
 google_music = []
 spotify = ["web_api", "webbrowser", "base64"]
 youtube = []
 bandcamp = []
+player = ["rodio", "blocking"]
 web_api = ["url", "http"]
+gui = ["iced", "iced_native", "iced_futures"]
 [dependencies]
+take_mut = "0.2"
+rodio = {version = "0.11", optional = true}
 url = {version = "2", optional = true}
 serde = {version = "1.0", features=["derive"]}
 serde_json = "1.0"
 serde_urlencoded = "0.6"
 reqwest = {version = "0.10", features=["json"]}
 clap = "2"
+blocking = {version = "1", optional = true}
 http = {version = "0.2", optional = true}
 tokio = {version = "0.2", features = ["rt-threaded", "time", "fs", "stream", "macros", "blocking", "io-util"]}
 webbrowser = {version = "0.5", optional = true}
 base64 = {version = "0.12", optional = true}
+iced = {version = "0.1", optional = true, features = ["tokio"]}
+iced_native = {version = "0.2", optional = true}
+iced_futures = {version =  "0.1", optional = true}

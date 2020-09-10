@@ -1,3 +1,6 @@
+#[derive(
+    Copy, Clone, Eq, PartialEq, Ord, PartialOrd, serde::Deserialize, serde::Serialize, Hash, Debug,
+)]
 pub enum Scope {
     UserReadPlaybackPosition,
     UserReadEmail,
@@ -15,7 +18,7 @@ pub enum Scope {
     UserReadRecentlyPlayed,
 }
 impl Scope {
-    pub fn as_str(&self) -> &'static str {
+    pub fn as_str(self) -> &'static str {
         match self {
             Scope::UserReadPlaybackPosition => "user-read-playback-position",
             Scope::UserReadEmail => "user-read-email",

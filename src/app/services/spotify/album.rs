@@ -1,11 +1,12 @@
-use crate::services::error::Error;
-use crate::services::spotify::artist::Artist;
-use crate::services::spotify::client::Client;
-use crate::services::spotify::copyright::Copyright;
-use crate::services::spotify::external_ids::ExternalIDs;
-use crate::services::spotify::external_urls::ExternalURLs;
-use crate::services::spotify::images::Image;
-use crate::services::spotify::track::SimpleTrack;
+use crate::app::services::error::Error;
+use crate::app::services::spotify::artist::Artist;
+use crate::app::services::spotify::client::Client;
+use crate::app::services::spotify::copyright::Copyright;
+use crate::app::services::spotify::external_ids::ExternalIDs;
+use crate::app::services::spotify::external_urls::ExternalURLs;
+use crate::app::services::spotify::images::Image;
+use crate::app::services::spotify::paging::PagingObject;
+use crate::app::services::spotify::track::SimpleTrack;
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum AlbumType {
@@ -107,10 +108,31 @@ pub struct FullAlbum {
 }
 impl FullAlbum {
     pub async fn get_album(client: &Client, album_id: &str) -> Result<FullAlbum, Error> {
-        Ok(client
-            .get(format!("albums/{}", album_id).as_str())
-            .await?
-            .json()
-            .await?)
+        client.get(format!("albums/{}", album_id).as_str()).await
     }
+    pub async fn get_album_tracks(
+        client: &Client,
+        album_id: &str,
+    ) -> Result<PagingObject<SimpleTrack>, Error> {
+        client
+            .get(format!("albums/{}/tracks", album_id).as_str())
+            .await
+    }
+    pub async fn get_saved_albums(client: &Client) -> Result<PagingObject<SavedAlbum>, Error> {
+        client.get(format!("me/albums").as_str()).await
+    }
+    pub async fn get_albums(client: &Client) -> Result<Vec<FullAlbum>, Error> {
+        client.get(format!("albums").as_str()).await
+    }
+    /*
+    pub async fn save_albums(client: &Client) -> Result<(), Error> {    // continue when andrew finishes the oauth crate
+        Ok(client.post())
+    }*/
+}
+#[derive(
+    serde::Serialize, serde::Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug,
+)]
+pub struct SavedAlbum {
+    added_at: String,
+    album: FullAlbum,
 }

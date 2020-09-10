@@ -1,11 +1,12 @@
-use crate::services::error::Error;
-use crate::services::spotify::album::FullAlbum;
-use crate::services::spotify::artist::Artist;
-use crate::services::spotify::client::Client;
-use crate::services::spotify::episode::SimpleEpisode;
-use crate::services::spotify::playlist::Playlist;
-use crate::services::spotify::show::SimpleShow;
-use crate::services::spotify::track::FullTrack;
+use crate::app::services::error::Error;
+use crate::app::services::spotify::album::FullAlbum;
+use crate::app::services::spotify::artist::Artist;
+use crate::app::services::spotify::client::Client;
+use crate::app::services::spotify::episode::SimpleEpisode;
+use crate::app::services::spotify::paging::PagingObject;
+use crate::app::services::spotify::playlist::FullPlaylist;
+use crate::app::services::spotify::show::SimpleShow;
+use crate::app::services::spotify::track::FullTrack;
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Hash)]
 pub enum SearchType {
@@ -62,31 +63,10 @@ pub struct SearchRequest<'a> {
 
 impl<'a> SearchRequest<'a> {
     pub async fn submit(&self, client: &Client) -> Result<SearchResponse, Error> {
-        dbg!(
-            &client
-                .get(format!("search/?{}", serde_urlencoded::to_string(self)?.as_str()).as_str())
-                .await?
-                .bytes()
-                .await?
-        );
-        Ok(client
+        client
             .get(format!("search/?{}", serde_urlencoded::to_string(self)?.as_str()).as_str())
-            .await?
-            .json()
-            .await?)
+            .await
     }
-}
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct PagingObject<T> {
-    pub limit: usize,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub next: Option<String>,
-    pub offset: usize,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub previous: Option<String>,
-    pub href: String,
-    pub total: usize,
-    pub items: Vec<T>,
 }
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct SearchResponse {
@@ -97,7 +77,7 @@ pub struct SearchResponse {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tracks: Option<PagingObject<FullTrack>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub playlists: Option<PagingObject<Playlist>>,
+    pub playlists: Option<PagingObject<FullPlaylist>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shows: Option<PagingObject<SimpleShow>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -107,8 +87,8 @@ impl SearchResponse {}
 
 #[cfg(test)]
 pub mod tests {
-    use crate::services::error::Error;
-    use crate::services::spotify::search::{SearchRequest, SearchType};
+    use crate::app::services::error::Error;
+    use crate::app::services::spotify::search::{SearchRequest, SearchType};
 
     #[test]
     pub fn search_request_test() -> Result<(), Error> {

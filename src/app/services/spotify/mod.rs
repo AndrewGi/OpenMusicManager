@@ -1,6 +1,5 @@
 pub mod album;
 pub mod artist;
-pub mod authentication;
 pub mod client;
 pub mod copyright;
 pub mod country;
@@ -9,9 +8,15 @@ pub mod external_ids;
 pub mod external_urls;
 pub mod followers;
 pub mod images;
+pub mod paging;
 pub mod playlist;
 pub mod public_user;
+pub mod scope;
 pub mod search;
 pub mod show;
 pub mod track;
 pub mod track_link;
+
+pub const BASE_API_URL: &'static str = "https://api.spotify.com/v1/";
+pub const BASE_TOKEN_URL: &'static str = "https://accounts.spotify.com/api/token";
+pub const BASE_AUTH_URL: &'static str = "https://accounts.spotify.com/authorize";
