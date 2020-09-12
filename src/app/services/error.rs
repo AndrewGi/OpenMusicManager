@@ -1,3 +1,5 @@
+use futures_channel::mpsc::SendError;
+
 #[derive(Debug)]
 pub enum Error {
     IO(std::io::Error),
@@ -6,7 +8,13 @@ pub enum Error {
     URLParse(url::ParseError),
     JSON(serde_json::Error),
     URLSerialization(serde_urlencoded::ser::Error),
+    ChannelError,
     Other(String),
+}
+impl From<futures_channel::mpsc::SendError> for Error {
+    fn from(_: futures_channel::mpsc::SendError) -> Self {
+        Error::ChannelError
+    }
 }
 impl From<serde_urlencoded::ser::Error> for Error {
     fn from(e: serde_urlencoded::ser::Error) -> Self {
@@ -49,6 +57,7 @@ impl std::fmt::Display for Error {
             Error::InvalidHeaderValue(e) => write!(f, "Invalid header value error: {}", e),
             Error::JSON(e) => write!(f, "JSON error: {}", e),
             Error::URLSerialization(e) => write!(f, "URL serialization error: {}", e),
+            Error::ChannelError => write!(f, "MPSC channel error"),
         }
     }
 }

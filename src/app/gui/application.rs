@@ -1,26 +1,42 @@
 use crate::app::gui::table::{Table, TableState};
 use crate::app::track::TrackInfo;
-use iced::futures::stream::BoxStream;
+use futures::stream::BoxStream;
+use futures::SinkExt;
+use futures_channel::mpsc;
 
 pub const APP_TITLE: &'static str = "OpenMusicManager";
 #[derive(Clone, Default, Debug)]
-pub struct Flags {}
-#[derive(Clone, Debug)]
+pub struct Flags {
+    pub services: super::services::Flags,
+}
+#[derive(Debug)]
 pub enum Message {
-    NewTrack(TrackInfo),
+    NoOp,
+    Services(super::services::OutgoingMessage),
 }
 pub struct Application {
+    app_tx: mpsc::Sender<Message>,
+    services_tx: mpsc::Sender<super::services::IncomingMessage>,
+    app_rx: std::sync::Mutex<Option<ChannelSubscription<Message>>>,
     table: TableState,
     track_infos: Vec<TrackInfo>,
+}
+impl Application {
+    pub const CHANNEL_LEN: usize = 100;
 }
 impl iced::Application for Application {
     type Executor = iced::executor::Default;
     type Message = Message;
     type Flags = Flags;
 
-    fn new(_flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
+    fn new(mut flags: Flags) -> (Self, iced::Command<Self::Message>) {
+        let (app_tx, app_rx) = mpsc::channel(Self::CHANNEL_LEN);
+        let (mut services_tx, services_rx) = mpsc::channel(Self::CHANNEL_LEN);
         (
             Application {
+                app_tx: app_tx.clone(),
+                services_tx: services_tx.clone(),
+                app_rx: std::sync::Mutex::new(Some(ChannelSubscription::new(app_rx))),
                 table: TableState::new(
                     iced::Length::Shrink,
                     vec![
@@ -31,7 +47,34 @@ impl iced::Application for Application {
                 ),
                 track_infos: vec![],
             },
-            iced::Command::none(),
+            iced::Command::batch(vec![
+                super::services::Services::new(services_rx, app_tx)
+                    .run_loop()
+                    .into(),
+                async move {
+                    match (
+                        flags.services.spotify.client_id.take(),
+                        flags.services.spotify.client_secret.take(),
+                    ) {
+                        (Some(client_id), Some(client_secret)) => {
+                            services_tx
+                                .send(
+                                    super::services::spotify::IncomingMessage::Authorize {
+                                        client_id,
+                                        client_secret,
+                                    }
+                                    .into(),
+                                )
+                                .await
+                                .unwrap();
+                            Message::NoOp
+                        }
+
+                        _ => Message::NoOp,
+                    }
+                }
+                .into(),
+            ]),
         )
     }
 
@@ -40,14 +83,18 @@ impl iced::Application for Application {
     }
 
     fn update(&mut self, message: Message) -> iced::Command<Message> {
-        match message {
-            Message::NewTrack(t) => self.track_infos.push(t),
-        }
         iced::Command::none()
     }
 
     fn subscription(&self) -> iced::Subscription<Message> {
-        iced::Subscription::none()
+        self.app_rx
+            .try_lock()
+            .ok()
+            .as_mut()
+            .map(std::ops::DerefMut::deref_mut)
+            .and_then(Option::take)
+            .map(iced::Subscription::from_recipe)
+            .unwrap_or(iced::Subscription::none())
     }
     fn view(&mut self) -> iced::Element<'_, Message> {
         Table::with_children(&mut self.table, vec![]).into()
@@ -55,9 +102,10 @@ impl iced::Application for Application {
 }
 // Give each ChannelSubscription a unique `u64` token so we can hash it
 static CHANNEL_SUB_HASH: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-pub struct ChannelSubscription<T>(tokio::sync::mpsc::Receiver<T>, u64);
+#[derive(Debug)]
+pub struct ChannelSubscription<T>(pub mpsc::Receiver<T>, u64);
 impl<T> ChannelSubscription<T> {
-    pub fn new(rx: tokio::sync::mpsc::Receiver<T>) -> ChannelSubscription<T> {
+    pub fn new(rx: mpsc::Receiver<T>) -> ChannelSubscription<T> {
         ChannelSubscription(
             rx,
             CHANNEL_SUB_HASH.fetch_add(1, std::sync::atomic::Ordering::SeqCst),
