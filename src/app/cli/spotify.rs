@@ -1,6 +1,5 @@
 use crate::app::services::spotify;
-use crate::app::web_client;
-use crate::app::web_client::oauth2::{ClientID, ClientSecret, RedirectURI};
+use crate::app::web_client::oauth2::{ClientID, ClientSecret};
 
 pub fn spotify_clap_app() -> clap::App<'static, 'static> {
     clap::App::new("spotify")

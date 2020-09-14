@@ -18,7 +18,6 @@ gui = ["iced", "iced_native", "iced_futures"]
 [dependencies]
 take_mut = "0.2"
 futures = "0.3"
-futures-channel = "0.3"
 rodio = {version = "0.11", optional = true}
 url = {version = "2", optional = true}
 serde = {version = "1.0", features=["derive"]}

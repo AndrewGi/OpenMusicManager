@@ -1,11 +1,11 @@
 pub struct JustTableState {
     pub row_height: iced::Length,
-    pub column_widths: Vec<iced::Length>,
+    pub column_infos: Vec<ColumnInfo>,
 }
 impl JustTableState {
-    pub fn new(row_height: iced::Length, column_widths: Vec<iced::Length>) -> JustTableState {
+    pub fn new(row_height: iced::Length, column_infos: Vec<ColumnInfo>) -> JustTableState {
         JustTableState {
-            column_widths,
+            column_infos,
             row_height,
         }
     }
@@ -13,12 +13,12 @@ impl JustTableState {
         &self,
         values: impl Iterator<Item = iced::Element<'a, Message>>,
     ) -> iced::Row<'a, Message> {
-        let cols_count = self.column_widths.len();
+        let cols_count = self.column_infos.len();
         // Make sure the amount of row values is equal to the number of columns
         let mut index = 0;
         let out = iced::Row::with_children(
             values
-                .zip(self.column_widths.iter().copied())
+                .zip(self.column_infos.iter().map(|i| i.width))
                 .map(|(e, width)| {
                     index += 1;
                     iced::container::Container::new(e)
@@ -36,10 +36,19 @@ pub struct TableState {
     pub table: JustTableState,
     pub scroll: iced::scrollable::State,
 }
+pub struct ColumnInfo {
+    pub name: String,
+    pub width: iced::Length,
+}
+impl ColumnInfo {
+    pub fn new(name: String, width: iced::Length) -> ColumnInfo {
+        ColumnInfo { name, width }
+    }
+}
 impl TableState {
-    pub fn new(row_height: iced::Length, col_widths: Vec<iced::Length>) -> TableState {
+    pub fn new(row_height: iced::Length, cols_info: Vec<ColumnInfo>) -> TableState {
         TableState {
-            table: JustTableState::new(row_height, col_widths),
+            table: JustTableState::new(row_height, cols_info),
             scroll: iced::scrollable::State::new(),
         }
     }

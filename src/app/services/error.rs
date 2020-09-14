@@ -1,5 +1,3 @@
-use futures_channel::mpsc::SendError;
-
 #[derive(Debug)]
 pub enum Error {
     IO(std::io::Error),
@@ -11,8 +9,8 @@ pub enum Error {
     ChannelError,
     Other(String),
 }
-impl From<futures_channel::mpsc::SendError> for Error {
-    fn from(_: futures_channel::mpsc::SendError) -> Self {
+impl<T> From<tokio::sync::mpsc::error::SendError<T>> for Error {
+    fn from(_: tokio::sync::mpsc::error::SendError<T>) -> Self {
         Error::ChannelError
     }
 }

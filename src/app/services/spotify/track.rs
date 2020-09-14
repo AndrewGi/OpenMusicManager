@@ -3,6 +3,7 @@ use super::artist::Artist;
 use super::external_ids::ExternalIDs;
 use super::external_urls::ExternalURLs;
 use crate::app::services::error::Error;
+use crate::app::services::spotify::artist::SimpleArtist;
 use crate::app::services::spotify::client::Client;
 use crate::app::services::spotify::paging::PagingObject;
 
@@ -66,7 +67,7 @@ impl FullTrack {
     serde::Serialize, serde::Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug,
 )]
 pub struct SimpleTrack {
-    pub artists: Vec<Artist>,
+    pub artists: Vec<SimpleArtist>,
     pub available_markets: Vec<String>,
     pub disc_number: usize,
     pub duration_ms: usize,

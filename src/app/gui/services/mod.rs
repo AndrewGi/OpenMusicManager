@@ -1,8 +1,9 @@
 pub mod spotify;
 
 use crate::app::services::error::Error;
-use futures::{SinkExt, StreamExt};
-use futures_channel::mpsc;
+
+use futures::StreamExt;
+use tokio::sync::mpsc;
 
 #[derive(Clone, Default, Debug)]
 pub struct Flags {
@@ -13,6 +14,7 @@ pub enum OutgoingMessage {
     Spotify(spotify::OutgoingMessage),
     Done,
 }
+#[derive(Debug)]
 pub enum IncomingMessage {
     Spotify(spotify::IncomingMessage),
 }
@@ -27,10 +29,11 @@ pub struct Services {
 }
 pub struct Channel(pub mpsc::Sender<super::application::Message>);
 impl Channel {
-    pub async fn send(&mut self, msg: OutgoingMessage) -> Result<(), mpsc::SendError> {
+    pub async fn send(&mut self, msg: OutgoingMessage) -> Result<(), Error> {
         self.0
             .send(super::application::Message::Services(msg))
-            .await
+            .await?;
+        Ok(())
     }
 }
 impl Services {
@@ -58,4 +61,22 @@ impl Services {
     }
 }
 
-pub struct ServicesGui {}
+pub struct ServicesGui {
+    spotify: spotify::ServiceGui,
+}
+impl ServicesGui {
+    pub fn new() -> ServicesGui {
+        ServicesGui {
+            spotify: spotify::ServiceGui::new(),
+        }
+    }
+    pub fn update(&mut self, msg: OutgoingMessage) -> iced::Command<super::application::Message> {
+        match msg {
+            OutgoingMessage::Spotify(msg) => self.spotify.update(msg),
+            OutgoingMessage::Done => iced::Command::none(),
+        }
+    }
+    pub fn view(&mut self) -> iced::Element<'_, super::application::Message> {
+        self.spotify.view()
+    }
+}

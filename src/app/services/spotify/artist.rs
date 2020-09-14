@@ -11,7 +11,8 @@ use crate::app::services::spotify::paging::PagingObject;
 )]
 pub struct Artist {
     pub external_urls: ExternalURLs,
-    pub followers: Followers,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub followers: Option<Followers>,
     pub genres: String,
     pub href: String,
     pub id: String,
@@ -35,4 +36,17 @@ impl Artist {
             .get(format!("artists/{}/albums", artist_id).as_str())
             .await
     }
+}
+
+#[derive(
+    serde::Serialize, serde::Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug,
+)]
+pub struct SimpleArtist {
+    pub external_urls: ExternalURLs,
+    pub href: String,
+    pub id: String,
+    pub name: String,
+    #[serde(rename = "type")]
+    pub object_type: String,
+    pub uri: String,
 }

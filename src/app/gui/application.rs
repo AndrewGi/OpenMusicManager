@@ -1,8 +1,6 @@
-use crate::app::gui::table::{Table, TableState};
-use crate::app::track::TrackInfo;
 use futures::stream::BoxStream;
-use futures::SinkExt;
-use futures_channel::mpsc;
+use futures::Stream;
+use tokio::sync::mpsc;
 
 pub const APP_TITLE: &'static str = "OpenMusicManager";
 #[derive(Clone, Default, Debug)]
@@ -17,9 +15,8 @@ pub enum Message {
 pub struct Application {
     app_tx: mpsc::Sender<Message>,
     services_tx: mpsc::Sender<super::services::IncomingMessage>,
-    app_rx: std::sync::Mutex<Option<ChannelSubscription<Message>>>,
-    table: TableState,
-    track_infos: Vec<TrackInfo>,
+    app_rx: ChannelSubscription<Message>,
+    services_gui: super::services::ServicesGui,
 }
 impl Application {
     pub const CHANNEL_LEN: usize = 100;
@@ -36,16 +33,8 @@ impl iced::Application for Application {
             Application {
                 app_tx: app_tx.clone(),
                 services_tx: services_tx.clone(),
-                app_rx: std::sync::Mutex::new(Some(ChannelSubscription::new(app_rx))),
-                table: TableState::new(
-                    iced::Length::Shrink,
-                    vec![
-                        iced::Length::FillPortion(1),
-                        iced::Length::FillPortion(1),
-                        iced::Length::FillPortion(1),
-                    ],
-                ),
-                track_infos: vec![],
+                app_rx: ChannelSubscription::new(app_rx),
+                services_gui: super::services::ServicesGui::new(),
             },
             iced::Command::batch(vec![
                 super::services::Services::new(services_rx, app_tx)
@@ -83,49 +72,55 @@ impl iced::Application for Application {
     }
 
     fn update(&mut self, message: Message) -> iced::Command<Message> {
-        iced::Command::none()
+        dbg!(&message);
+        match message {
+            Message::NoOp => iced::Command::none(),
+            Message::Services(msg) => self.services_gui.update(msg),
+        }
     }
 
     fn subscription(&self) -> iced::Subscription<Message> {
-        self.app_rx
-            .try_lock()
-            .ok()
-            .as_mut()
-            .map(std::ops::DerefMut::deref_mut)
-            .and_then(Option::take)
-            .map(iced::Subscription::from_recipe)
-            .unwrap_or(iced::Subscription::none())
+        iced::Subscription::from_recipe(self.app_rx.clone())
     }
     fn view(&mut self) -> iced::Element<'_, Message> {
-        Table::with_children(&mut self.table, vec![]).into()
+        self.services_gui.view()
     }
 }
 // Give each ChannelSubscription a unique `u64` token so we can hash it
-static CHANNEL_SUB_HASH: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 #[derive(Debug)]
-pub struct ChannelSubscription<T>(pub mpsc::Receiver<T>, u64);
+pub struct ChannelSubscription<T>(pub std::sync::Arc<tokio::sync::Mutex<mpsc::Receiver<T>>>); // mpsc
 impl<T> ChannelSubscription<T> {
     pub fn new(rx: mpsc::Receiver<T>) -> ChannelSubscription<T> {
-        ChannelSubscription(
-            rx,
-            CHANNEL_SUB_HASH.fetch_add(1, std::sync::atomic::Ordering::SeqCst),
-        )
+        // mpsc
+        ChannelSubscription(std::sync::Arc::new(tokio::sync::Mutex::new(rx)))
+    }
+    pub fn stream(self) -> impl Stream<Item = T> {
+        futures::stream::unfold(self, |channel| async move {
+            let msg = channel.0.lock().await.recv().await;
+            msg.map(move |m| (m, channel))
+        })
     }
 }
-impl<T: Send + 'static, H: std::hash::Hasher, Event> iced_futures::subscription::Recipe<H, Event>
+impl<T> Clone for ChannelSubscription<T> {
+    fn clone(&self) -> Self {
+        ChannelSubscription(self.0.clone())
+    }
+}
+impl<T: 'static + Send, H: std::hash::Hasher, Event> iced_futures::subscription::Recipe<H, Event>
     for ChannelSubscription<T>
 {
     type Output = T;
 
     fn hash(&self, state: &mut H) {
         use std::hash::Hash;
-        self.1.hash(state);
+        std::any::Any::type_id(self).hash(state);
+        std::sync::Arc::as_ptr(&self.0).hash(state);
     }
 
     fn stream(self: Box<Self>, input: BoxStream<Event>) -> BoxStream<Self::Output> {
-        use iced_futures::futures::StreamExt;
         // We don't need the input so we free up the memory
         std::mem::drop(input);
-        (*self).0.boxed()
+
+        Box::pin((*self).stream())
     }
 }

@@ -1,5 +1,5 @@
 use crate::app::services::error::Error;
-use crate::app::services::spotify::artist::Artist;
+use crate::app::services::spotify::artist::{Artist, SimpleArtist};
 use crate::app::services::spotify::client::Client;
 use crate::app::services::spotify::copyright::Copyright;
 use crate::app::services::spotify::external_ids::ExternalIDs;
@@ -87,9 +87,9 @@ pub struct SimpleAlbum {
 )]
 pub struct FullAlbum {
     pub album_type: AlbumType,
-    pub artists: Vec<Artist>,
+    pub artists: Vec<SimpleArtist>,
     pub available_markets: Vec<String>,
-    pub copyrights: Vec<Copyright>, //it says copyright objects? might have to make a struct
+    //pub copyrights: Vec<Copyright>, //it says copyright objects? might have to make a struct
     pub external_ids: ExternalIDs,
     pub external_urls: ExternalURLs,
     pub genres: Vec<String>,
@@ -101,7 +101,7 @@ pub struct FullAlbum {
     pub popularity: usize,
     pub release_date: String,
     pub release_date_precision: String,
-    pub tracks: Vec<SimpleTrack>,
+    pub tracks: PagingObject<SimpleTrack>,
     #[serde(rename = "type")]
     pub object_type: String,
     pub uri: String,

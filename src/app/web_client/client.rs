@@ -25,25 +25,14 @@ impl Client {
         reqwest::Url::parse(format!("{}{}", self.base_url.as_str(), url_ending).as_str())
     }
     pub async fn get<T: serde::de::DeserializeOwned>(&self, url_ending: &str) -> Result<T, Error> {
-        Ok(self
-            .request(reqwest::Method::GET, url_ending)?
-            .send()
-            .await?
-            .json()
-            .await?)
+        Self::send_request(self.request(reqwest::Method::GET, url_ending)?).await
     }
     pub async fn post<T: serde::de::DeserializeOwned>(
         &self,
         url_ending: &str,
         body: String,
     ) -> Result<T, Error> {
-        Ok(self
-            .request(reqwest::Method::POST, url_ending)?
-            .body(body)
-            .send()
-            .await?
-            .json()
-            .await?)
+        Self::send_request(self.request(reqwest::Method::POST, url_ending)?.body(body)).await
     }
 
     pub async fn put<T: serde::de::DeserializeOwned>(
@@ -51,13 +40,12 @@ impl Client {
         url_ending: &str,
         body: String,
     ) -> Result<T, Error> {
-        Ok(self
-            .request(reqwest::Method::PUT, url_ending)?
-            .body(body)
-            .send()
-            .await?
-            .json()
-            .await?)
+        Self::send_request(self.request(reqwest::Method::PUT, url_ending)?.body(body)).await
+    }
+    pub async fn send_request<T: serde::de::DeserializeOwned>(
+        request: reqwest::RequestBuilder,
+    ) -> Result<T, Error> {
+        Ok(request.send().await?.json().await?)
     }
     pub fn request(
         &self,
