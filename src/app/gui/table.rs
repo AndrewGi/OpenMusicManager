@@ -58,7 +58,7 @@ pub struct Table<'a, Message> {
     pub state: &'a mut TableState,
 }
 
-impl<'a, Message> Table<'a, Message> {
+impl<'a, Message: 'a> Table<'a, Message> {
     pub fn with_children(
         state: &'a mut TableState,
         children: Vec<iced::Element<'a, Message>>,
@@ -90,9 +90,30 @@ impl<'a, Message> Table<'a, Message> {
             state: self.state,
         }
     }
+    pub fn titles(&self) -> iced::Row<'a, Message> {
+        iced::Row::with_children(
+            self.state
+                .table
+                .column_infos
+                .iter()
+                .map(|s| {
+                    iced::Text::new(s.name.clone())
+                        .size(30)
+                        .width(s.width)
+                        .into()
+                })
+                .collect(),
+        )
+    }
+    pub fn element(self) -> iced::Element<'a, Message> {
+        iced::Column::new()
+            .push(self.titles())
+            .push(self.col)
+            .into()
+    }
 }
 impl<'a, Message: 'a> From<Table<'a, Message>> for iced::Element<'a, Message> {
     fn from(t: Table<'a, Message>) -> Self {
-        t.col.into()
+        t.element()
     }
 }
